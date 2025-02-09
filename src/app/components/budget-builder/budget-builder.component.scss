@@ -1,0 +1,21 @@
+.cell {
+  padding: 8px;
+  width: 128px;
+  text-align: left;
+  border: 1px solid;
+  outline: none;
+}
+
+.cell:focus {
+  background-color: yellow;
+}
+
+.context-menu {
+  display: hidden;
+  position: absolute;
+  background-color: white;
+  border: 1px solid;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+  padding: 8px;
+}

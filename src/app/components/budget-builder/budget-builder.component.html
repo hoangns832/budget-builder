@@ -1,0 +1,146 @@
+<div class="pb-1">
+  <input
+    type="month"
+    id="from-month"
+    name="fromMonth"
+    [(ngModel)]="fromMonth"
+  />
+  ~
+  <input type="month" id="to-month" name="toMonth" [(ngModel)]="toMonth" />
+</div>
+<table class="border-collapse w-full bg-white shadow-md" #budgetTable>
+  <thead>
+    <tr class="bg-gray-200">
+      <th class="border p-2"></th>
+      <th class="border p-2">Incomes</th>
+      <th class="border p-2">Expenses</th>
+      <th class="border p-2" *ngFor="let month of getDisplayMonth">
+        {{ month }}
+      </th>
+    </tr>
+  </thead>
+  <tbody id="budget-table">
+    <tr *ngFor="let data of tableData; let i = index">
+      <td class="border p-2 text-center">{{ i + 1 }}</td>
+      <td class="cell">{{ data.income }}</td>
+      <td class="cell">{{ data.expense }}</td>
+      <td
+        *ngIf="isDisplayDataOfMonth(1)"
+        appTable
+        class="cell"
+        contenteditable="true"
+        [tabindex]="i + 1"
+      >
+        {{ data.expense }}
+      </td>
+      <td
+        *ngIf="isDisplayDataOfMonth(2)"
+        appTable
+        class="cell"
+        contenteditable="true"
+        [tabindex]="i + 1"
+      >
+        {{ data.expense }}
+      </td>
+      <td
+        *ngIf="isDisplayDataOfMonth(3)"
+        appTable
+        class="cell"
+        contenteditable="true"
+        [tabindex]="i + 1"
+      >
+        {{ data.expense }}
+      </td>
+      <td
+        *ngIf="isDisplayDataOfMonth(4)"
+        appTable
+        class="cell"
+        contenteditable="true"
+        [tabindex]="i + 1"
+      >
+        {{ data.expense }}
+      </td>
+      <td
+        *ngIf="isDisplayDataOfMonth(5)"
+        appTable
+        class="cell"
+        contenteditable="true"
+        [tabindex]="i + 1"
+      >
+        {{ data.expense }}
+      </td>
+      <td
+        *ngIf="isDisplayDataOfMonth(6)"
+        appTable
+        class="cell"
+        contenteditable="true"
+        [tabindex]="i + 1"
+      >
+        {{ data.expense }}
+      </td>
+      <td
+        *ngIf="isDisplayDataOfMonth(7)"
+        appTable
+        class="cell"
+        contenteditable="true"
+        [tabindex]="i + 1"
+      >
+        {{ data.expense }}
+      </td>
+      <td
+        *ngIf="isDisplayDataOfMonth(8)"
+        appTable
+        class="cell"
+        contenteditable="true"
+        [tabindex]="i + 1"
+      >
+        {{ data.expense }}
+      </td>
+      <td
+        *ngIf="isDisplayDataOfMonth(9)"
+        appTable
+        class="cell"
+        contenteditable="true"
+        [tabindex]="i + 1"
+      >
+        {{ data.expense }}
+      </td>
+      <td
+        *ngIf="isDisplayDataOfMonth(10)"
+        appTable
+        class="cell"
+        contenteditable="true"
+        [tabindex]="i + 1"
+      >
+        {{ data.expense }}
+      </td>
+      <td
+        *ngIf="isDisplayDataOfMonth(11)"
+        appTable
+        class="cell"
+        contenteditable="true"
+        [tabindex]="i + 1"
+      >
+        {{ data.expense }}
+      </td>
+      <td
+        *ngIf="isDisplayDataOfMonth(12)"
+        appTable
+        class="cell"
+        contenteditable="true"
+        [tabindex]="i + 1"
+      >
+        {{ data.expense }}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div id="context-menu" class="context-menu">
+  <button
+    id="apply-to-all"
+    class="block w-full text-left p-2 hover:bg-gray-200"
+  >
+    Apply to all
+  </button>
+</div>
