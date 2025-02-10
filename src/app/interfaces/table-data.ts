@@ -1,7 +1,7 @@
 export interface BudgetCategory {
   name: string;
-  subCategories: BudgetSubCategory[];
-  subTotal: Record<string, number>;
+  subCategories?: BudgetSubCategory[];
+  subTotal?: Record<string, number>;
   values?: Record<string, number>;
 }
 

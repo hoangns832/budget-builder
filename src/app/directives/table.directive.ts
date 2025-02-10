@@ -15,26 +15,24 @@ export class TableDirective {
     switch (event.key) {
       case 'Enter':
         event.preventDefault();
-        this.budgetBuilderService.setTableData([
-          ...this.budgetBuilderService.getTableData(),
-          {
-            id: 1,
-            category: 'Income',
-            subCategories: [''],
-            january: 0,
-            february: 0,
-            march: 0,
-            april: 0,
-            may: 0,
-            june: 0,
-            july: 0,
-            august: 0,
-            september: 0,
-            october: 0,
-            november: 0,
-            december: 0,
-          },
-        ]);
+        const { row, table } = this.getCellIndex();
+        let tableData = this.budgetBuilderService.getTableData();
+        tableData.forEach((data, index) => {
+          if (data.name === table.rows[row].cells[1].textContent) {
+            tableData.push({ name: '' });
+            return;
+          } else {
+            if (
+              data.subCategories?.some(
+                (subCategory) => subCategory.name === table.rows[row].cells[1].textContent
+              )
+            ) {
+              tableData[index].subCategories?.push({ name: '', values: {} });
+              return;
+            }
+          }
+        });
+        this.budgetBuilderService.setTableData(tableData);
         this.handleArrowKey('ArrowDown');
         break;
       case 'ArrowDown':

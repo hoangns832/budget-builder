@@ -12,142 +12,71 @@
   <thead>
     <tr class="bg-gray-200">
       <th class="border p-2"></th>
-      <th class="border p-2">Incomes</th>
-      <th class="border p-2">Expenses</th>
+      <th class="border p-2">Category</th>
       <th class="border p-2" *ngFor="let month of getDisplayMonth">
         {{ month }}
       </th>
-      <th></th>
+      <th class="border p-2">Action</th>
     </tr>
   </thead>
   <tbody id="budget-table">
-    <tr *ngFor="let data of tableData; let i = index">
-      <td class="border p-2 text-center">{{ i + 1 }}</td>
-      <td class="cell">{{ data.name }}</td>
-      <td class="cell">{{ data.expenses }}</td>
-      <td
-        *ngIf="isDisplayDataOfMonth(1)"
-        appTable
-        class="cell"
-        (contextmenu)="openContextMenu($event)"
-        contenteditable="true"
-        [tabindex]="i + 1"
-      >
-        {{ data['january'] }}
-      </td>
-      <td
-        *ngIf="isDisplayDataOfMonth(2)"
-        appTable
-        class="cell"
-        (contextmenu)="openContextMenu($event)"
-        contenteditable="true"
-        [tabindex]="i + 1"
-      >
-        {{ data['february'] }}
-      </td>
-      <td
-        *ngIf="isDisplayDataOfMonth(3)"
-        appTable
-        class="cell"
-        (contextmenu)="openContextMenu($event)"
-        contenteditable="true"
-        [tabindex]="i + 1"
-      >
-        {{ data['march'] }}
-      </td>
-      <td
-        *ngIf="isDisplayDataOfMonth(4)"
-        appTable
-        class="cell"
-        (contextmenu)="openContextMenu($event)"
-        contenteditable="true"
-        [tabindex]="i + 1"
-      >
-        {{ data['april'] }}
-      </td>
-      <td
-        *ngIf="isDisplayDataOfMonth(5)"
-        appTable
-        class="cell"
-        (contextmenu)="openContextMenu($event)"
-        contenteditable="true"
-        [tabindex]="i + 1"
-      >
-        {{ data['may'] }}
-      </td>
-      <td
-        *ngIf="isDisplayDataOfMonth(6)"
-        appTable
-        class="cell"
-        (contextmenu)="openContextMenu($event)"
-        contenteditable="true"
-        [tabindex]="i + 1"
-      >
-        {{ data['june'] }}
-      </td>
-      <td
-        *ngIf="isDisplayDataOfMonth(7)"
-        appTable
-        class="cell"
-        (contextmenu)="openContextMenu($event)"
-        contenteditable="true"
-        [tabindex]="i + 1"
-      >
-        {{ data['july'] }}
-      </td>
-      <td
-        *ngIf="isDisplayDataOfMonth(8)"
-        appTable
-        class="cell"
-        (contextmenu)="openContextMenu($event)"
-        contenteditable="true"
-        [tabindex]="i + 1"
-      >
-        {{ data['august'] }}
-      </td>
-      <td
-        *ngIf="isDisplayDataOfMonth(9)"
-        appTable
-        class="cell"
-        (contextmenu)="openContextMenu($event)"
-        contenteditable="true"
-        [tabindex]="i + 1"
-      >
-        {{ data['september'] }}
-      </td>
-      <td
-        *ngIf="isDisplayDataOfMonth(10)"
-        appTable
-        class="cell"
-        (contextmenu)="openContextMenu($event)"
-        contenteditable="true"
-        [tabindex]="i + 1"
-      >
-        {{ data['october'] }}
-      </td>
-      <td
-        *ngIf="isDisplayDataOfMonth(11)"
-        appTable
-        class="cell"
-        (contextmenu)="openContextMenu($event)"
-        contenteditable="true"
-        [tabindex]="i + 1"
-      >
-        {{ data['november'] }}
-      </td>
-      <td
-        *ngIf="isDisplayDataOfMonth(12)"
-        appTable
-        class="cell"
-        (contextmenu)="openContextMenu($event)"
-        contenteditable="true"
-        [tabindex]="i + 1"
-      >
-        {{ data['december'] }}
-      </td>
-      <td>DELETE</td>
-    </tr>
+    <ng-container *ngFor="let data of getFlatTableData; let i = index">
+      <tr *ngIf="getBudgetCategory(data).subTotal">
+        <td class="border p-2 text-center"></td>
+        <td class="cell font-bold">Sub Total</td>
+        <ng-container *ngFor="let month of getDisplayMonth; let j = index">
+          <td *ngIf="isDisplayDataOfMonth(j + 1)" class="cell font-bold">
+            {{ getBudgetCategory(data).subTotal ? getBudgetCategory(data).subTotal?.[month] : '' }}
+          </td>
+        </ng-container>
+        <td class="cell delete-cell"></td>
+      </tr>
+      <tr>
+        <td class="border p-2 text-center">{{ i + 1 }}</td>
+        <td class="cell" [contentEditable]="!data.name">{{ data.name }}</td>
+        <ng-container *ngFor="let month of getDisplayMonth; let j = index">
+          <td
+            *ngIf="isDisplayDataOfMonth(j + 1)"
+            appTable
+            class="cell"
+            (contextmenu)="openContextMenu($event)"
+            (input)="onValueChanged($event)"
+            contenteditable="true"
+            [tabindex]="i + 1"
+          >
+            {{ data.values ? data.values[month] : "" }}
+          </td>
+        </ng-container>
+        <td class="cell delete-cell" (click)="onDeleteRow(i)">DELETE</td>
+      </tr>
+    </ng-container>
   </tbody>
+  <tfoot>
+    <tr>
+      <td class="cell"><strong>Total Income</strong></td>
+      <td class="cell"></td>
+      <td class="cell font-bold" *ngFor="let month of getDisplayMonth">
+        {{ budgetData.summary.totalIncome[month] }}
+      </td>
+      <td class="cell"></td>
+    </tr>
+    <tr>
+      <td class="cell"><strong>Total Expense</strong></td>
+      <td class="cell"></td>
+      <td class="cell font-bold" *ngFor="let month of getDisplayMonth">
+        {{ budgetData.summary.totalExpense[month] }}
+      </td>
+      <td class="cell"></td>
+    </tr>
+    <tr>
+      <td class="cell"><strong>Profit/Loss</strong></td>
+      <td class="cell"></td>
+      <td class="cell font-bold" *ngFor="let month of getDisplayMonth">
+        {{ budgetData.summary.profit[month] }}
+      </td>
+      <td class="cell"></td>
+    </tr>
+  </tfoot>
 </table>
 
 <app-context-menu #contextMenu [options]="menuOptions"></app-context-menu>
