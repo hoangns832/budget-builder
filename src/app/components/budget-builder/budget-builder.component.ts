@@ -20,7 +20,7 @@ import { ContextMenuComponent } from '../context-menu/context-menu.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BudgetBuilderComponent {
-  @ViewChild('budgetTable') table!: ElementRef<HTMLTableElement>;
+  @ViewChild('budgetTable') tableEl!: ElementRef<HTMLTableElement>;
   @ViewChild('contextMenu') contextMenu!: ContextMenuComponent;
 
   fromMonth: string = '2024-01';
@@ -43,7 +43,7 @@ export class BudgetBuilderComponent {
   }
 
   ngAfterViewInit() {
-    this.table.nativeElement.rows[1].cells[2]?.focus();
+    this.tableEl.nativeElement.rows[1].cells[2]?.focus();
   }
 
   get getIndexOfFromMonth() {
@@ -95,16 +95,35 @@ export class BudgetBuilderComponent {
     this.budgetBuilderService.setTableData(this.tableData);
   }
 
-  onValueChanged(event: Event) {
-    console.log(event);
+  onValueChanged(event: Event, month: string) {
+    const value = Number((event.target as HTMLTableCellElement).textContent);
+    const { row } = this.budgetBuilderService.getSelectionCell();
+    this.tableData.forEach((item) => {
+      if (
+        item.name === this.tableEl.nativeElement.rows[row].cells[1].textContent
+      ) {
+        item.subTotal = this.calculateTotal(item, month);
+      }
+    });
+  }
+
+  private calculateTotal(
+    item: BudgetCategory,
+    month: string
+  ): Record<string, number> {
+    const total =
+      item.subCategories?.reduce((sum, sub) => {
+        return sum + sub.values[month];
+      }, 0) ?? 0;
+    return { [month]: item?.values ? total ?? 0 + item?.values[month] : total };
   }
 
   private fillData() {
     const { row, column } = this.budgetBuilderService.getSelectionCell();
     const cellValue =
-      this.table.nativeElement.rows[row].cells[column].textContent;
+      this.tableEl.nativeElement.rows[row].cells[column].textContent;
     const header =
-      this.table.nativeElement.rows[0].cells[column].textContent?.trim();
+      this.tableEl.nativeElement.rows[0].cells[column].textContent?.trim();
     this.tableData = this.tableData.map((item) => {
       if (header && item.values && Object.keys(item.values).includes(header)) {
         const result = {
@@ -124,7 +143,10 @@ export class BudgetBuilderComponent {
         const result = {
           ...item,
           subCategories: item.subCategories.map((sub) => {
-            return {...sub, values: { ...sub.values, [header]: Number(cellValue) }};
+            return {
+              ...sub,
+              values: { ...sub.values, [header]: Number(cellValue) },
+            };
           }),
         };
         return result;
