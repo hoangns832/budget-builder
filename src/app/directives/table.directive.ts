@@ -17,7 +17,23 @@ export class TableDirective {
         event.preventDefault();
         this.budgetBuilderService.setTableData([
           ...this.budgetBuilderService.getTableData(),
-          { income: 0, expense: 0 },
+          {
+            id: 1,
+            category: 'Income',
+            subCategories: [''],
+            january: 0,
+            february: 0,
+            march: 0,
+            april: 0,
+            may: 0,
+            june: 0,
+            july: 0,
+            august: 0,
+            september: 0,
+            october: 0,
+            november: 0,
+            december: 0,
+          },
         ]);
         this.handleArrowKey('ArrowDown');
         break;
@@ -40,13 +56,26 @@ export class TableDirective {
     }
   }
 
+  @HostListener('contextmenu', ['$event'])
+  onContextMenu(event: MouseEvent) {
+    const { row, column } = this.getCellIndex();
+    this.budgetBuilderService.setSelectionCell({ row, column });
+  }
+
+  private getCellIndex() {
+    const currentCell = this.el.nativeElement.closest('td');
+    const currentRow = currentCell.parentElement;
+    const table = currentRow.closest('table');
+    return {
+      row: currentRow.rowIndex,
+      column: currentCell.cellIndex,
+      table,
+    };
+  }
+
   private handleArrowKey(key: string) {
     if (key === 'ArrowDown' || key === 'ArrowUp') {
-      const currentCell = this.el.nativeElement.closest('td');
-      const currentRow = currentCell.parentElement;
-      const table = currentRow.closest('table');
-      const rowIndex = currentRow.rowIndex;
-      const cellIndex = currentCell.cellIndex;
+      const { row: rowIndex, column: cellIndex, table } = this.getCellIndex();
       const newRowIndex = key === 'ArrowDown' ? rowIndex + 1 : rowIndex - 1;
       newRowIndex < table.rows.length &&
         table.rows[newRowIndex].cells[cellIndex]?.focus();

@@ -1,0 +1,12 @@
+<div
+  *ngIf="visible"
+  class="context-menu"
+  [style.left.px]="x"
+  [style.top.px]="y"
+>
+  <ul>
+    <li *ngFor="let option of options" (click)="selectOption(option.action)">
+      {{ option.label }}
+    </li>
+  </ul>
+</div>

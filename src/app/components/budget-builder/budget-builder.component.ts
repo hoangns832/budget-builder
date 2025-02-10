@@ -2,10 +2,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
-  ViewChild
+  ViewChild,
 } from '@angular/core';
-import { TableData } from '../../interfaces/table-data';
+import { BUDGET_DATA, MONTH_OF_YEAR } from '../../common/global.const';
+import { BudgetCategory, BudgetData } from '../../interfaces/table-data';
 import { BudgetBuilderService } from '../../services/budget-builder.service';
+import { ContextMenuComponent } from '../context-menu/context-menu.component';
 
 @Component({
   selector: 'app-budget-builder',
@@ -15,27 +17,15 @@ import { BudgetBuilderService } from '../../services/budget-builder.service';
 })
 export class BudgetBuilderComponent {
   @ViewChild('budgetTable') table!: ElementRef<HTMLTableElement>;
+  @ViewChild('contextMenu') contextMenu!: ContextMenuComponent;
 
   fromMonth: string = '2024-01';
   toMonth: string = '2024-12';
-  monthsOfYear: string[] = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-  tableData: TableData[] = [
-    { income: 0, expense: 0 },
-    { income: 0, expense: 0 },
-  ];
+  monthsOfYear: string[] = MONTH_OF_YEAR;
+  budgetData: BudgetData = BUDGET_DATA;
+  tableData: BudgetCategory[] = []
+
+  menuOptions = [{ label: 'Apply to all', action: () => this.fillData() }];
 
   constructor(private budgetBuilderService: BudgetBuilderService) {
     budgetBuilderService.setTableData(this.tableData);
@@ -68,5 +58,26 @@ export class BudgetBuilderComponent {
 
   isDisplayDataOfMonth(index: number) {
     return index >= this.getIndexOfFromMonth && index <= this.getIndexOfToMonth;
+  }
+
+  openContextMenu(event: MouseEvent) {
+    this.contextMenu.open(event);
+  }
+
+  private fillData() {
+    const { row, column } = this.budgetBuilderService.getSelectionCell();
+    const cellValue =
+      this.table.nativeElement.rows[row].cells[column].textContent;
+    const header = this.table.nativeElement.rows[0].cells[column].textContent
+      ?.trim()
+      .toLowerCase();
+    this.tableData = this.tableData.map((item) => {
+      if (header && Object.keys(item).includes(header)) {
+        const result = { ...item, [header]: Number(cellValue) };
+        console.log(result);
+        return result;
+      }
+      return item;
+    });
   }
 }

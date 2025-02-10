@@ -17,130 +17,137 @@
       <th class="border p-2" *ngFor="let month of getDisplayMonth">
         {{ month }}
       </th>
+      <th></th>
     </tr>
   </thead>
   <tbody id="budget-table">
     <tr *ngFor="let data of tableData; let i = index">
       <td class="border p-2 text-center">{{ i + 1 }}</td>
-      <td class="cell">{{ data.income }}</td>
-      <td class="cell">{{ data.expense }}</td>
+      <td class="cell">{{ data.name }}</td>
+      <td class="cell">{{ data.expenses }}</td>
       <td
         *ngIf="isDisplayDataOfMonth(1)"
         appTable
         class="cell"
+        (contextmenu)="openContextMenu($event)"
         contenteditable="true"
         [tabindex]="i + 1"
       >
-        {{ data.expense }}
+        {{ data['january'] }}
       </td>
       <td
         *ngIf="isDisplayDataOfMonth(2)"
         appTable
         class="cell"
+        (contextmenu)="openContextMenu($event)"
         contenteditable="true"
         [tabindex]="i + 1"
       >
-        {{ data.expense }}
+        {{ data['february'] }}
       </td>
       <td
         *ngIf="isDisplayDataOfMonth(3)"
         appTable
         class="cell"
+        (contextmenu)="openContextMenu($event)"
         contenteditable="true"
         [tabindex]="i + 1"
       >
-        {{ data.expense }}
+        {{ data['march'] }}
       </td>
       <td
         *ngIf="isDisplayDataOfMonth(4)"
         appTable
         class="cell"
+        (contextmenu)="openContextMenu($event)"
         contenteditable="true"
         [tabindex]="i + 1"
       >
-        {{ data.expense }}
+        {{ data['april'] }}
       </td>
       <td
         *ngIf="isDisplayDataOfMonth(5)"
         appTable
         class="cell"
+        (contextmenu)="openContextMenu($event)"
         contenteditable="true"
         [tabindex]="i + 1"
       >
-        {{ data.expense }}
+        {{ data['may'] }}
       </td>
       <td
         *ngIf="isDisplayDataOfMonth(6)"
         appTable
         class="cell"
+        (contextmenu)="openContextMenu($event)"
         contenteditable="true"
         [tabindex]="i + 1"
       >
-        {{ data.expense }}
+        {{ data['june'] }}
       </td>
       <td
         *ngIf="isDisplayDataOfMonth(7)"
         appTable
         class="cell"
+        (contextmenu)="openContextMenu($event)"
         contenteditable="true"
         [tabindex]="i + 1"
       >
-        {{ data.expense }}
+        {{ data['july'] }}
       </td>
       <td
         *ngIf="isDisplayDataOfMonth(8)"
         appTable
         class="cell"
+        (contextmenu)="openContextMenu($event)"
         contenteditable="true"
         [tabindex]="i + 1"
       >
-        {{ data.expense }}
+        {{ data['august'] }}
       </td>
       <td
         *ngIf="isDisplayDataOfMonth(9)"
         appTable
         class="cell"
+        (contextmenu)="openContextMenu($event)"
         contenteditable="true"
         [tabindex]="i + 1"
       >
-        {{ data.expense }}
+        {{ data['september'] }}
       </td>
       <td
         *ngIf="isDisplayDataOfMonth(10)"
         appTable
         class="cell"
+        (contextmenu)="openContextMenu($event)"
         contenteditable="true"
         [tabindex]="i + 1"
       >
-        {{ data.expense }}
+        {{ data['october'] }}
       </td>
       <td
         *ngIf="isDisplayDataOfMonth(11)"
         appTable
         class="cell"
+        (contextmenu)="openContextMenu($event)"
         contenteditable="true"
         [tabindex]="i + 1"
       >
-        {{ data.expense }}
+        {{ data['november'] }}
       </td>
       <td
         *ngIf="isDisplayDataOfMonth(12)"
         appTable
         class="cell"
+        (contextmenu)="openContextMenu($event)"
         contenteditable="true"
         [tabindex]="i + 1"
       >
-        {{ data.expense }}
+        {{ data['december'] }}
       </td>
+      <td>DELETE</td>
     </tr>
   </tbody>
 </table>
 
-<div id="context-menu" class="context-menu">
-  <button
-    id="apply-to-all"
-    class="block w-full text-left p-2 hover:bg-gray-200"
-  >
-    Apply to all
-  </button>
-</div>
+<app-context-menu #contextMenu [options]="menuOptions"></app-context-menu>
