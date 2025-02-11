@@ -4,16 +4,23 @@
     id="from-month"
     name="fromMonth"
     [(ngModel)]="fromMonth"
+    [max]="toMonth"
   />
   ~
-  <input type="month" id="to-month" name="toMonth" [(ngModel)]="toMonth" />
+  <input
+    type="month"
+    id="to-month"
+    name="toMonth"
+    [(ngModel)]="toMonth"
+    [min]="fromMonth"
+  />
 </div>
 <table class="border-collapse w-full bg-white shadow-md" #budgetTable>
   <thead>
     <tr class="bg-gray-200">
       <th class="border p-2"></th>
       <th class="border p-2">Category</th>
-      <th class="border p-2" *ngFor="let month of getDisplayMonth">
+      <th class="border p-2" *ngFor="let month of displayMonth">
         {{ month }}
       </th>
       <th class="border p-2">Action</th>
@@ -24,7 +31,7 @@
       <tr *ngIf="getBudgetCategory(data).subTotal">
         <td class="border p-2 text-center"></td>
         <td class="cell font-bold">Sub Total</td>
-        <ng-container *ngFor="let month of getDisplayMonth; let j = index">
+        <ng-container *ngFor="let month of displayMonth; let j = index">
           <td *ngIf="isDisplayDataOfMonth(j + 1)" class="cell font-bold">
             {{ getBudgetCategory(data).subTotal ? getBudgetCategory(data).subTotal?.[month] : '' }}
           </td>
@@ -34,14 +41,14 @@
       <tr>
         <td class="border p-2 text-center">{{ i + 1 }}</td>
         <td class="cell" [contentEditable]="!data.name">{{ data.name }}</td>
-        <ng-container *ngFor="let month of getDisplayMonth; let j = index">
+        <ng-container *ngFor="let month of displayMonth; let j = index">
           <td
             *ngIf="isDisplayDataOfMonth(j + 1)"
             appTable
             class="cell"
             (contextmenu)="openContextMenu($event)"
-            (input)="onValueChanged($event, month)"
-            contenteditable="true"
+            (input)="onValueChanged($event, month, j)"
+            [contentEditable]="isEdited(data, month)"
             [tabindex]="i + 1"
           >
             {{ data.values ? data.values[month] : "" }}
@@ -53,26 +60,42 @@
   </tbody>
   <tfoot>
     <tr>
+      <td class="border p-2"></td>
       <td class="cell"><strong>Total Income</strong></td>
-      <td class="cell"></td>
-      <td class="cell font-bold" *ngFor="let month of getDisplayMonth">
-        {{ budgetData.summary.totalIncome[month] }}
+      <td class="cell font-bold" *ngFor="let month of displayMonth">
+        {{ budgetData().summary.totalIncome[month] }}
       </td>
       <td class="cell"></td>
     </tr>
     <tr>
+      <td class="border p-2"></td>
       <td class="cell"><strong>Total Expense</strong></td>
-      <td class="cell"></td>
-      <td class="cell font-bold" *ngFor="let month of getDisplayMonth">
-        {{ budgetData.summary.totalExpense[month] }}
+      <td class="cell font-bold" *ngFor="let month of displayMonth">
+        {{ budgetData().summary.totalExpense[month] }}
       </td>
       <td class="cell"></td>
     </tr>
     <tr>
+      <td class="border p-2"></td>
       <td class="cell"><strong>Profit/Loss</strong></td>
+      <td class="cell font-bold" *ngFor="let month of displayMonth">
+        {{ budgetData().summary.profit[month] }}
+      </td>
       <td class="cell"></td>
-      <td class="cell font-bold" *ngFor="let month of getDisplayMonth">
-        {{ budgetData.summary.profit[month] }}
+    </tr>
+    <tr>
+      <td class="border p-2"></td>
+      <td class="cell"><strong>Opening Balance</strong></td>
+      <td class="cell font-bold" *ngFor="let month of displayMonth">
+        {{ budgetData().summary.openingBalance[month] }}
+      </td>
+      <td class="cell"></td>
+    </tr>
+    <tr>
+      <td class="border p-2"></td>
+      <td class="cell"><strong>Closing Balance</strong></td>
+      <td class="cell font-bold" *ngFor="let month of displayMonth">
+        {{ budgetData().summary.closingBalance[month] }}
       </td>
       <td class="cell"></td>
     </tr>

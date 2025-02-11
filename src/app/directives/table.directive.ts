@@ -24,7 +24,8 @@ export class TableDirective {
           } else {
             if (
               data.subCategories?.some(
-                (subCategory) => subCategory.name === table.rows[row].cells[1].textContent
+                (subCategory) =>
+                  subCategory.name === table.rows[row].cells[1].textContent
               )
             ) {
               tableData[index].subCategories?.push({ name: '', values: {} });
@@ -54,8 +55,28 @@ export class TableDirective {
     }
   }
 
-  @HostListener('contextmenu', ['$event'])
-  onContextMenu(event: MouseEvent) {
+  @HostListener('input')
+  onInput() {
+    const selection = window.getSelection();
+
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+
+    const startOffset = range.startOffset;
+    const endOffset = range.endOffset;
+    setTimeout(() => {
+      const newRange = document.createRange();
+      newRange.setStart(range.startContainer, startOffset);
+      newRange.setEnd(range.endContainer, endOffset);
+      newRange.collapse();
+      selection.removeAllRanges();
+      selection.addRange(newRange);
+    })
+  }
+
+  @HostListener('focus', [''])
+  onFocus() {
     const { row, column } = this.getCellIndex();
     this.budgetBuilderService.setSelectionCell({ row, column });
   }
@@ -74,7 +95,15 @@ export class TableDirective {
   private handleArrowKey(key: string) {
     if (key === 'ArrowDown' || key === 'ArrowUp') {
       const { row: rowIndex, column: cellIndex, table } = this.getCellIndex();
-      const newRowIndex = key === 'ArrowDown' ? rowIndex + 1 : rowIndex - 1;
+      let newRowIndex = key === 'ArrowDown' ? rowIndex + 1 : rowIndex - 1;
+      while (newRowIndex > 1 && newRowIndex < table.rows.length - 5) {
+        if (
+          table.rows[newRowIndex].cells[cellIndex].contentEditable === 'true'
+        ) {
+          break;
+        }
+        key === 'ArrowDown' ? newRowIndex++ : newRowIndex--;
+      }
       newRowIndex < table.rows.length &&
         table.rows[newRowIndex].cells[cellIndex]?.focus();
       return;

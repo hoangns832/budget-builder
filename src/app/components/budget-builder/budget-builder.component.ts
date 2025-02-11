@@ -3,6 +3,8 @@ import {
   Component,
   ElementRef,
   ViewChild,
+  computed,
+  signal,
 } from '@angular/core';
 import { BUDGET_DATA, MONTH_OF_YEAR } from '../../common/global.const';
 import {
@@ -26,19 +28,21 @@ export class BudgetBuilderComponent {
   fromMonth: string = '2024-01';
   toMonth: string = '2024-12';
   monthsOfYear: string[] = MONTH_OF_YEAR;
-  budgetData: BudgetData = BUDGET_DATA;
-  tableData: BudgetCategory[] = [];
+  budgetData = signal<BudgetData>(BUDGET_DATA);
+  tableData = signal<BudgetCategory[]>([]);
 
   menuOptions = [{ label: 'Apply to all', action: () => this.fillData() }];
 
   constructor(private budgetBuilderService: BudgetBuilderService) {
-    this.tableData = this.budgetData.incomes.concat(this.budgetData.expenses);
-    budgetBuilderService.setTableData(this.tableData);
+    this.tableData.set(
+      this.budgetData().incomes.concat(this.budgetData().expenses)
+    );
+    budgetBuilderService.setTableData(this.tableData());
   }
 
   ngOnInit() {
     this.budgetBuilderService.tableDataObs().subscribe((data) => {
-      this.tableData = data;
+      this.tableData.set(data);
     });
   }
 
@@ -46,26 +50,31 @@ export class BudgetBuilderComponent {
     this.tableEl.nativeElement.rows[1].cells[2]?.focus();
   }
 
-  get getIndexOfFromMonth() {
+  get indexOfFromMonth() {
     return new Date(this.fromMonth).getMonth();
   }
 
-  get getIndexOfToMonth() {
+  get indexOfToMonth() {
     return new Date(this.toMonth).getMonth() + 1;
   }
 
-  get getDisplayMonth() {
-    return this.monthsOfYear.slice(
-      this.getIndexOfFromMonth,
-      this.getIndexOfToMonth
-    );
+  get displayMonth() {
+    return this.monthsOfYear.slice(this.indexOfFromMonth, this.indexOfToMonth);
   }
 
   get getFlatTableData() {
-    return this.tableData.flatMap((item) => [
+    return this.tableData().flatMap((item) => [
       item,
       ...(item.subCategories ?? []),
     ]);
+  }
+
+  get totalIncome() {
+    return computed(() => this.displayMonth.reduce);
+  }
+
+  isEdited(data: BudgetCategory | BudgetSubCategory, month: string): boolean {
+    return !!data?.values && data?.values[month] !== undefined;
   }
 
   getBudgetCategory(data: BudgetCategory | BudgetSubCategory) {
@@ -83,7 +92,7 @@ export class BudgetBuilderComponent {
   }
 
   isDisplayDataOfMonth(index: number) {
-    return index >= this.getIndexOfFromMonth && index <= this.getIndexOfToMonth;
+    return index >= this.indexOfFromMonth && index <= this.indexOfToMonth;
   }
 
   openContextMenu(event: MouseEvent) {
@@ -91,31 +100,100 @@ export class BudgetBuilderComponent {
   }
 
   onDeleteRow(index: number) {
-    this.tableData.splice(index, 1);
-    this.budgetBuilderService.setTableData(this.tableData);
+    this.tableData().splice(index, 1);
+    this.budgetBuilderService.setTableData(this.tableData());
   }
 
-  onValueChanged(event: Event, month: string) {
+  onValueChanged(event: Event, month: string, index: number) {
     const value = Number((event.target as HTMLTableCellElement).textContent);
-    const { row } = this.budgetBuilderService.getSelectionCell();
-    this.tableData.forEach((item) => {
-      if (
-        item.name === this.tableEl.nativeElement.rows[row].cells[1].textContent
-      ) {
-        item.subTotal = this.calculateTotal(item, month);
-      }
-    });
+    const { row, column } = this.budgetBuilderService.getSelectionCell();
+
+    if (column <= 1) {
+      return;
+    }
+
+    const categoryName =
+      this.tableEl.nativeElement.rows[row].cells[1].textContent;
+    this.tableData.set(
+      this.tableData().map((item) => {
+        if (item.values && item.name === categoryName) {
+          item.values[month] = value;
+        }
+
+        const subCategoryIndex = item?.subCategories?.findIndex(
+          (item) => item.name === categoryName
+        );
+        if (subCategoryIndex !== -1 && item.subCategories) {
+          item.subCategories[subCategoryIndex!].values[month] = value;
+        }
+        return item;
+      })
+    );
+
+    this.calculateTotal(month, index);
   }
 
-  private calculateTotal(
-    item: BudgetCategory,
-    month: string
-  ): Record<string, number> {
-    const total =
-      item.subCategories?.reduce((sum, sub) => {
-        return sum + sub.values[month];
+  private calculateTotal(month: string, index: number) {
+    this.tableData.set(
+      this.tableData().map((item) => {
+        const subCategoryTotal =
+          item.subCategories?.reduce((sum, item) => {
+            return sum + item.values[month];
+          }, 0) ?? 0;
+
+        let subTotal = subCategoryTotal;
+        item.values && (subTotal += item?.values[month] ?? 0);
+        item.subTotal && (item.subTotal[month] = subTotal);
+        return item;
+      })
+    );
+    const totalIncome =
+      this.tableData().reduce((sum, item) => {
+        const incomeIndex = this.budgetData().incomes.findIndex(
+          (income) => income.name === item.name
+        );
+        if (incomeIndex >= 0 && item.subTotal) {
+          sum += item.subTotal[month];
+        }
+        return sum;
       }, 0) ?? 0;
-    return { [month]: item?.values ? total ?? 0 + item?.values[month] : total };
+    const totalExpense =
+      this.tableData().reduce((sum, item) => {
+        const incomeIndex = this.budgetData().expenses.findIndex(
+          (expense) => expense.name === item.name
+        );
+        if (incomeIndex >= 0 && item.subTotal) {
+          sum += item.subTotal[month];
+        }
+        return sum;
+      }, 0) ?? 0;
+    const profitOrLoss = totalIncome - totalExpense;
+    const openingBalance = index === 0 ? 0 : this.budgetData().summary.closingBalance[this.displayMonth[index - 1]]
+    this.budgetData.set({
+      ...this.budgetData(),
+      summary: {
+        totalIncome: {
+          ...this.budgetData().summary.totalIncome,
+          [month]: totalIncome,
+        },
+        totalExpense: {
+          ...this.budgetData().summary.totalExpense,
+          [month]: totalExpense,
+        },
+        profit: {
+          ...this.budgetData().summary.profit,
+          [month]: profitOrLoss,
+        },
+        openingBalance: {
+          ...this.budgetData().summary.openingBalance,
+          [month]: openingBalance,
+        },
+        closingBalance: {
+          ...this.budgetData().summary.closingBalance,
+          [month]: profitOrLoss + openingBalance,
+        },
+      },
+    });
   }
 
   private fillData() {
@@ -124,35 +202,41 @@ export class BudgetBuilderComponent {
       this.tableEl.nativeElement.rows[row].cells[column].textContent;
     const header =
       this.tableEl.nativeElement.rows[0].cells[column].textContent?.trim();
-    this.tableData = this.tableData.map((item) => {
-      if (header && item.values && Object.keys(item.values).includes(header)) {
-        const result = {
-          ...item,
-          values: { ...item.values, [header]: Number(cellValue) },
-        };
-        item = result;
-      }
+    this.tableData.set(
+      this.tableData().map((item) => {
+        if (
+          header &&
+          item.values &&
+          Object.keys(item.values).includes(header)
+        ) {
+          const result = {
+            ...item,
+            values: { ...item.values, [header]: Number(cellValue) },
+          };
+          item = result;
+        }
 
-      if (
-        header &&
-        item.subCategories &&
-        item.subCategories.some((sub) =>
-          Object.keys(sub.values).includes(header)
-        )
-      ) {
-        const result = {
-          ...item,
-          subCategories: item.subCategories.map((sub) => {
-            return {
-              ...sub,
-              values: { ...sub.values, [header]: Number(cellValue) },
-            };
-          }),
-        };
-        return result;
-      }
+        if (
+          header &&
+          item.subCategories &&
+          item.subCategories.some((sub) =>
+            Object.keys(sub.values).includes(header)
+          )
+        ) {
+          const result = {
+            ...item,
+            subCategories: item.subCategories.map((sub) => {
+              return {
+                ...sub,
+                values: { ...sub.values, [header]: Number(cellValue) },
+              };
+            }),
+          };
+          return result;
+        }
 
-      return item;
-    });
+        return item;
+      })
+    );
   }
 }
